@@ -321,22 +321,61 @@
 
     <!-- PAGE: BASE DE DATOS -->
     <div class="page" id="page-db">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div style="font-size:15px;font-weight:600">Prácticas y aranceles</div>
         <div style="display:flex;gap:8px;align-items:center">
           <span class="save-ind" id="db-ind"></span>
-          <button class="btn btn-primary btn-sm" onclick="saveDB()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Guardar
-          </button>
           <button class="btn btn-ghost btn-sm" onclick="addPractica()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nueva
           </button>
         </div>
       </div>
+      <div style="position:relative;margin-bottom:10px">
+        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="db-search" placeholder="Buscar práctica..." style="padding-left:32px" oninput="renderDB()">
+      </div>
       <div id="db-list"></div>
+      <div style="text-align:center;padding:24px 0 8px;color:var(--text3);font-size:11px;line-height:1.6">
+        <div style="font-family:'DM Mono',monospace">v1.0</div>
+        <div>Creado por Alejo De Antoni</div>
+      </div>
     </div>
 
+  </div>
+
+  <!-- MODAL EDITOR -->
+  <div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:flex-end;justify-content:center" onclick="if(event.target===this)closeModal()">
+    <div id="modal" style="background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:480px;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));max-height:85vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:600" id="modal-title">Editar práctica</div>
+        <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:var(--text2);padding:4px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="field-group" style="margin:0;grid-column:1/-1">
+          <div class="field-label">Nombre</div>
+          <input type="text" id="m-nom" placeholder="Nombre de la práctica">
+        </div>
+        <div class="field-group" style="margin:0">
+          <div class="field-label">Código</div>
+          <input type="text" id="m-cod" placeholder="101">
+        </div>
+      </div>
+      <div class="field-label" style="margin-bottom:8px">Aranceles por obra social</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px" id="m-os-fields"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="saveModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Guardar
+        </button>
+        <button class="btn" style="flex:0 0 auto;color:var(--red);border-color:rgba(217,54,54,0.3)" onclick="deleteFromModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          Eliminar
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- NAVBAR -->
@@ -604,30 +643,76 @@ async function borrar(id){
 }
 
 // ---- BASE DE DATOS ----
+let modalIdx = null;
+
 function renderDB(){
   const list=document.getElementById("db-list");
-  list.innerHTML=practicas.map((p,i)=>`
-    <div class="practica-card">
-      <div class="practica-head">
-        <input class="practica-nom" type="text" value="${p.nom||""}" data-idx="${i}" data-field="nom" placeholder="Nombre" style="background:transparent;border:none;color:var(--text);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;width:100%;padding:0">
-        <input class="practica-cod" type="text" value="${p.cod||""}" data-idx="${i}" data-field="cod" placeholder="000" style="background:transparent;border:none;color:var(--accent);font-size:12px;font-family:'DM Mono',monospace;width:55px;text-align:right;padding:0">
-        <button class="item-del" onclick="deletePractica(${i})" style="margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-      <div class="practica-grid">
-        ${OS_KEYS.map(os=>`<div class="pf-row"><div class="pf-label">${os}</div><input class="pf-input" type="number" value="${p[os]||""}" placeholder="—" data-idx="${i}" data-field="${os}"></div>`).join("")}
-      </div>
-    </div>`).join("");
-  list.querySelectorAll("input[data-idx]").forEach(inp=>inp.addEventListener("change",()=>{
-    const idx=+inp.dataset.idx; const field=inp.dataset.field;
-    practicas[idx][field]=inp.type==="number"?(inp.value?Number(inp.value):null):inp.value;
-  }));
+  const q=(document.getElementById("db-search")?.value||"").toLowerCase().trim();
+  const filtered=practicas.map((p,i)=>({p,i})).filter(({p})=>!q||p.nom.toLowerCase().includes(q)||p.cod.includes(q));
+  if(!filtered.length){list.innerHTML='<div class="empty"><p>Sin resultados</p></div>';return;}
+  list.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+    ${filtered.map(({p,i},fi)=>{
+      const precios=OS_KEYS.filter(os=>p[os]).map(os=>`<span style="font-size:11px;color:var(--text3)">${os} <span style="color:var(--text2);font-family:'DM Mono',monospace">$${Number(p[os]).toLocaleString("es-AR")}</span></span>`).join(" · ");
+      return `<div onclick="openModal(${i})" style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:${fi<filtered.length-1?'1px solid var(--border)':\`none\`};cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:rgba(0,0,0,0.05)" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${p.nom||'Sin nombre'}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace">${p.cod||'—'} ${precios?'· '+precios:''}</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" style="flex-shrink:0;margin-left:8px"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function openModal(idx){
+  modalIdx=idx;
+  const p=practicas[idx];
+  document.getElementById("modal-title").textContent="Editar práctica";
+  document.getElementById("m-nom").value=p.nom||"";
+  document.getElementById("m-cod").value=p.cod||"";
+  const fields=document.getElementById("m-os-fields");
+  fields.innerHTML=OS_KEYS.map(os=>`<div class="field-group" style="margin:0"><div class="field-label">${os}</div><input type="number" id="m-os-${os.replace(/ /g,'_')}" value="${p[os]||''}" placeholder="—" style="height:38px;font-size:14px;font-family:'DM Mono',monospace"></div>`).join("");
+  const overlay=document.getElementById("modal-overlay");
+  overlay.style.display="flex";
+  requestAnimationFrame(()=>{overlay.style.opacity="1";});
+  document.getElementById("m-nom").focus();
+}
+
+function closeModal(){
+  document.getElementById("modal-overlay").style.display="none";
+  modalIdx=null;
+}
+
+async function saveModal(){
+  if(modalIdx===null)return;
+  practicas[modalIdx].nom=document.getElementById("m-nom").value.trim()||"Sin nombre";
+  practicas[modalIdx].cod=document.getElementById("m-cod").value.trim();
+  OS_KEYS.forEach(os=>{
+    const v=document.getElementById("m-os-"+os.replace(/ /g,"_"))?.value;
+    practicas[modalIdx][os]=v?Number(v):null;
+  });
+  closeModal();
+  renderDB();
+  await saveAll("db-ind");
+  toast("Arancel guardado ✓");
+}
+
+async function deleteFromModal(){
+  if(modalIdx===null)return;
+  if(!confirm("¿Eliminar "+practicas[modalIdx].nom+"?"))return;
+  practicas.splice(modalIdx,1);
+  closeModal();
+  renderDB();
+  await saveAll("db-ind");
+  toast("Práctica eliminada");
 }
 
 async function saveDB(){await saveAll("db-ind");toast("Aranceles guardados ✓");}
+
 function addPractica(){
-  const b={cod:"",nom:"Nueva práctica"};OS_KEYS.forEach(os=>b[os]=null);
-  practicas.unshift(b);renderDB();
-  document.getElementById("db-list").firstElementChild?.querySelector("input")?.focus();
+  const b={cod:"",nom:""};OS_KEYS.forEach(os=>b[os]=null);
+  practicas.unshift(b);
+  openModal(0);
 }
 function deletePractica(i){if(!confirm("¿Eliminar esta práctica?"))return;practicas.splice(i,1);renderDB();}
 
