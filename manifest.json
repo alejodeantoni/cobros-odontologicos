@@ -4,8 +4,8 @@
   "description": "Registro de cobros odontológicos por obra social",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f1117",
-  "theme_color": "#1a1f2e",
+  "background_color": "#f4f6fb",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "icons": [
     {
