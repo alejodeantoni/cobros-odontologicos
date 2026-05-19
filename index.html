@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1f2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cobros">
+<meta name="description" content="Registro de cobros odontológicos por obra social">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Cobros Odontológicos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1f2e;
+    --bg3: #222840;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f2f8;
+    --text2: #8b92b0;
+    --text3: #555e7a;
+    --accent: #4f7fff;
+    --accent2: #3a6aff;
+    --accent-bg: rgba(79,127,255,0.12);
+    --accent-border: rgba(79,127,255,0.35);
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.1);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --yellow: #fbbf24;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* LAYOUT */
+  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px 10px;
+    padding-top: max(14px, env(safe-area-inset-top, 14px));
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+  .topbar-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+  .content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  .navbar {
+    display: flex;
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 10px 0; background: none; border: none; cursor: pointer;
+    color: var(--text3); font-family: 'DM Sans', sans-serif; font-size: 10px; font-weight: 500;
+    transition: color .15s;
+  }
+  .nav-btn svg { width: 20px; height: 20px; }
+  .nav-btn.active { color: var(--accent); }
+
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* FORMS */
+  .field-group { margin-bottom: 12px; }
+  .field-label { font-size: 11px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  input[type=text], input[type=date], input[type=number], select {
+    width: 100%; height: 42px; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0 12px; font-size: 15px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; -webkit-appearance: none; appearance: none;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus { outline: none; border-color: var(--accent); }
+  input::placeholder { color: var(--text3); }
+  input.error { border-color: var(--red) !important; }
+
+  .os-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+  .os-chip {
+    padding: 7px 4px; text-align: center; font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg2); color: var(--text2); cursor: pointer; transition: all .15s;
+  }
+  .os-chip.active { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+
+  /* SEARCH */
+  .search-wrap { position: relative; margin-bottom: 12px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+  .search-input { padding-left: 36px !important; }
+  .dropdown {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--radius); z-index: 100; max-height: 240px; overflow-y: auto; display: none;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .dropdown.open { display: block; }
+  .dd-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s;
+  }
+  .dd-row:last-child { border-bottom: none; }
+  .dd-row:hover, .dd-row:active { background: var(--bg2); }
+  .dd-name { font-size: 14px; }
+  .dd-code { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+  .dd-price { font-size: 13px; color: var(--accent); font-family: 'DM Mono', monospace; white-space: nowrap; margin-left: 8px; }
+
+  /* ITEMS LIST */
+  .items-list { margin-bottom: 12px; }
+  .item-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px; margin-bottom: 8px;
+  }
+  .item-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .item-name { font-size: 14px; font-weight: 500; flex: 1; margin-right: 8px; }
+  .item-del { background: none; border: none; cursor: pointer; color: var(--text3); padding: 0; }
+  .item-del:hover { color: var(--red); }
+  .item-bottom { display: flex; align-items: center; gap: 8px; }
+  .os-tag { font-size: 10px; padding: 3px 7px; border-radius: 6px; background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); white-space: nowrap; }
+  .item-monto { flex: 1; }
+  .item-monto input { height: 34px; font-size: 14px; font-family: 'DM Mono', monospace; }
+  .item-qty { width: 60px; }
+  .item-qty input { height: 34px; font-size: 14px; text-align: center; font-family: 'DM Mono', monospace; }
+  .item-sub { font-size: 13px; font-family: 'DM Mono', monospace; color: var(--green); white-space: nowrap; min-width: 80px; text-align: right; }
+
+  /* TOTAL BAR */
+  .total-bar {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .total-lbl { font-size: 13px; color: var(--text2); }
+  .total-amt { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .btn {
+    flex: 1; height: 44px; border: none; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: opacity .15s, transform .1s; -webkit-appearance: none;
+  }
+  .btn:active { transform: scale(0.97); opacity: .85; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); flex: 0 0 44px; }
+  .btn-sm { height: 34px; font-size: 12px; flex: none; padding: 0 14px; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty svg { margin-bottom: 10px; opacity: .4; }
+  .empty p { font-size: 14px; }
+
+  /* HISTORIAL */
+  .section-title { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px; margin-top: 20px; }
+  .section-title:first-child { margin-top: 0; }
+
+  .dash-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .dash-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .dash-lbl { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .dash-val { font-size: 18px; font-weight: 600; font-family: 'DM Mono', monospace; }
+  .dash-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .dash-card.total { grid-column: 1 / -1; background: var(--accent-bg); border-color: var(--accent-border); }
+  .dash-card.total .dash-val { color: var(--accent); font-size: 24px; }
+
+  .mes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .mes-name { font-size: 15px; font-weight: 600; text-transform: capitalize; }
+  .mes-total { font-size: 14px; font-family: 'DM Mono', monospace; color: var(--text2); }
+
+  .os-pills { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+  .os-pill { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: var(--bg3); border: 1px solid var(--border); color: var(--text2); }
+  .os-pill strong { color: var(--text); }
+
+  .cobro-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .cobro-pac { font-size: 14px; font-weight: 500; }
+  .cobro-meta { font-size: 11px; color: var(--text2); margin-top: 3px; }
+  .cobro-right { text-align: right; }
+  .cobro-amt { font-size: 15px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--green); }
+  .cobro-actions { display: flex; gap: 6px; margin-top: 6px; justify-content: flex-end; }
+  .cobro-btn { font-size: 11px; padding: 3px 10px; border: 1px solid var(--border); border-radius: 6px; background: none; color: var(--text2); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .cobro-btn.del { color: var(--red); border-color: rgba(248,113,113,0.3); }
+  .cobro-btn:hover { background: var(--bg3); }
+
+  .mes-filter { margin-bottom: 16px; }
+
+  /* DB */
+  .practica-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px; }
+  .practica-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .practica-nom { font-size: 14px; font-weight: 500; flex: 1; margin-right: 8px; }
+  .practica-cod { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--accent); }
+  .practica-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pf-row { display: flex; flex-direction: column; gap: 3px; }
+  .pf-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+  .pf-input { height: 32px; font-size: 13px; padding: 0 8px; font-family: 'DM Mono', monospace; }
+  .pf-text { height: 32px; font-size: 13px; padding: 0 8px; }
+
+  .toast {
+    position: fixed; bottom: calc(80px + env(safe-area-inset-bottom, 0)); left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    padding: 10px 18px; font-size: 13px; color: var(--text); white-space: nowrap;
+    opacity: 0; transition: all .25s; pointer-events: none; z-index: 999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .save-ind { font-size: 12px; color: var(--text3); }
+  .save-ind.ok { color: var(--green); }
+  .save-ind.err { color: var(--red); }
+
+  select option { background: var(--bg3); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🦷 Cobros Odontológicos</div>
+      <div class="topbar-sub" id="topbar-sub">Cargando...</div>
+    </div>
+    <span class="save-ind" id="save-ind"></span>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="content">
+
+    <!-- PAGE: COBRO -->
+    <div class="page active" id="page-cobro">
+      <div class="field-group">
+        <div class="field-label">Paciente</div>
+        <input type="text" id="pac-inp" placeholder="Nombre del paciente">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div class="field-group" style="margin:0">
+          <div class="field-label">Fecha</div>
+          <input type="date" id="fecha-inp">
+        </div>
+        <div class="field-group" style="margin:0">
+          <div class="field-label">Obra social</div>
+          <select id="os-sel">
+            <option value="OSDE">OSDE</option>
+            <option value="PODER J">Poder J</option>
+            <option value="MEDIF">MEDIF</option>
+            <option value="SWISS M">Swiss M</option>
+            <option value="SANCOR">SANCOR</option>
+            <option value="OPDEA">OPDEA</option>
+            <option value="PARTICULAR">Particular</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="search-inp" placeholder="Buscar práctica o código...">
+        <div class="dropdown" id="dd"></div>
+      </div>
+
+      <div class="items-list" id="items-list">
+        <div class="empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <p>Buscá una práctica para empezar</p>
+        </div>
+      </div>
+
+      <div class="total-bar">
+        <span class="total-lbl">Total cobrado</span>
+        <span class="total-amt" id="total-disp">$0</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="registrar()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Registrar cobro
+        </button>
+        <button class="btn btn-ghost" onclick="limpiar()" title="Nuevo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="btn btn-ghost" onclick="copiar()" title="Copiar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE: HISTORIAL -->
+    <div class="page" id="page-hist">
+      <div class="mes-filter">
+        <select id="mes-filter" onchange="renderHist()">
+          <option value="">Todos los meses</option>
+        </select>
+      </div>
+      <div id="hist-content">
+        <div class="empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>No hay cobros registrados aún</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: BASE DE DATOS -->
+    <div class="page" id="page-db">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:600">Prácticas y aranceles</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="save-ind" id="db-ind"></span>
+          <button class="btn btn-primary btn-sm" onclick="saveDB()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="addPractica()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="db-list"></div>
+    </div>
+
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <button class="nav-btn active" id="nav-cobro" onclick="switchTab('cobro')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="8" rx="1"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      Cobro
+    </button>
+    <button class="nav-btn" id="nav-hist" onclick="switchTab('hist')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Historial
+    </button>
+    <button class="nav-btn" id="nav-db" onclick="switchTab('db')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Aranceles
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BIN_ID="6a0c8d786877513b279ac377";
+const API_KEY="$2a$10$hHnQkQ1fwFzQ4o4jBoxpWu4SlHFLM7P/G2tjwH5PlHj0BzEX2gyDO";
+const BASE_URL="https://api.jsonbin.io/v3/b/"+BIN_ID;
+const OS_KEYS=["OSDE","PODER J","MEDIF","SWISS M","SANCOR","OPDEA","PARTICULAR"];
+
+const DEFAULT_DB=[
+  {cod:"101",  nom:"Consulta",                OSDE:18354,  "PODER J":null, MEDIF:12000, "SWISS M":14013, SANCOR:null, OPDEA:19730, PARTICULAR:null},
+  {cod:"104",  nom:"Consulta urgencia",        OSDE:21939,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"111",  nom:"Consulta pre quirúrgica",  OSDE:18354,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"112",  nom:"Consulta post quirúrgica", OSDE:18354,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"222",  nom:"Rehabilitación estética",  OSDE:39831,  "PODER J":null, MEDIF:35000, "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"306",  nom:"Protección pulpar directa",OSDE:4879,   "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"501",  nom:"Tartrectomía",             OSDE:null,   "PODER J":null, MEDIF:null,  "SWISS M":10903, SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"505",  nom:"Sellador",                 OSDE:4608,   "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"701",  nom:"Consulta odontopediatría", OSDE:33698,  "PODER J":null, MEDIF:null,  "SWISS M":24387, SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"704",  nom:"Endodoncia temporarios",   OSDE:27991,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"750",  nom:"Corona en temporarios",    OSDE:184167, "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"802",  nom:"Periodoncia",              OSDE:20219,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"1001", nom:"Exodoncia",                OSDE:30537,  "PODER J":null, MEDIF:30000, "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"4117", nom:"Incrustación porcelana",   OSDE:272144, "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"4118", nom:"Incrustación resina",      OSDE:91437,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"4207", nom:"Flex hasta 4 pd",          OSDE:643890, "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"4208", nom:"Flex +5 pd",               OSDE:717477, "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"11417",nom:"PMR flux",                 OSDE:114554, "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"40412",nom:"PMR",                      OSDE:144554, "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"50400",nom:"Módulo preventivo",         OSDE:20792,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"50401",nom:"Mantenimiento previo",      OSDE:20216,  "PODER J":null, MEDIF:null,  "SWISS M":null,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"70101",nom:"Certificado bucodental",    OSDE:null,   "PODER J":null, MEDIF:null,  "SWISS M":9090,  SANCOR:null, OPDEA:null,  PARTICULAR:null},
+  {cod:"20801",nom:"Rehabilitación estética 2", OSDE:null,   "PODER J":null, MEDIF:null,  "SWISS M":20500, SANCOR:null, OPDEA:null,  PARTICULAR:null},
+];
+
+let practicas=[], historial=[], items=[];
+
+// Init fecha
+const fechaInp=document.getElementById("fecha-inp");
+fechaInp.value=new Date().toISOString().split("T")[0];
+
+// Toast
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+// Save indicator
+function setInd(id,msg,cls){
+  const el=document.getElementById(id);
+  el.textContent=msg; el.className="save-ind"+(cls?" "+cls:"");
+  if(cls==="ok")setTimeout(()=>{el.textContent="";el.className="save-ind";},2500);
+}
+
+async function loadData(){
+  document.getElementById("topbar-sub").textContent="Sincronizando...";
+  try{
+    const r=await fetch(BASE_URL+"/latest",{headers:{"X-Master-Key":API_KEY}});
+    const j=await r.json();
+    const d=j.record||{};
+    practicas=d.practicas&&d.practicas.length?d.practicas:DEFAULT_DB;
+    historial=d.historial||[];
+    document.getElementById("topbar-sub").textContent=historial.length+" cobros registrados";
+  }catch(e){
+    practicas=DEFAULT_DB; historial=[];
+    document.getElementById("topbar-sub").textContent="Sin conexión — datos locales";
+  }
+  renderDB(); renderHist(); updateMesFiltro();
+}
+
+async function saveAll(indId){
+  setInd(indId,"Guardando...");
+  try{
+    await fetch(BASE_URL,{method:"PUT",headers:{"Content-Type":"application/json","X-Master-Key":API_KEY},body:JSON.stringify({practicas,historial})});
+    setInd(indId,"Guardado ✓","ok");
+    document.getElementById("topbar-sub").textContent=historial.length+" cobros registrados";
+  }catch(e){ setInd(indId,"Error","err"); }
+}
+
+function switchTab(t){
+  ["cobro","hist","db"].forEach(x=>{
+    document.getElementById("page-"+x).classList.toggle("active",x===t);
+    document.getElementById("nav-"+x).classList.toggle("active",x===t);
+  });
+  if(t==="hist"){updateMesFiltro();renderHist();}
+}
+
+// ---- COBRO ----
+const searchInp=document.getElementById("search-inp");
+const dd=document.getElementById("dd");
+
+searchInp.addEventListener("input",()=>{
+  const q=searchInp.value.trim().toLowerCase();
+  if(!q){dd.classList.remove("open");return;}
+  const os=document.getElementById("os-sel").value;
+  const res=practicas.filter(p=>p.nom.toLowerCase().includes(q)||p.cod.includes(q)).slice(0,12);
+  if(!res.length){dd.innerHTML='<div class="dd-row"><span style="color:var(--text3);font-size:13px">Sin resultados</span></div>';dd.classList.add("open");return;}
+  dd.innerHTML=res.map(p=>{
+    const v=p[os]; const vs=v?"$"+Number(v).toLocaleString("es-AR"):"—";
+    return `<div class="dd-row" data-cod="${p.cod}">
+      <div><div class="dd-name">${p.nom}</div><div class="dd-code">${p.cod}</div></div>
+      <div class="dd-price">${vs}</div>
+    </div>`;
+  }).join("");
+  dd.classList.add("open");
+  dd.querySelectorAll(".dd-row[data-cod]").forEach(el=>el.addEventListener("click",()=>{
+    const p=practicas.find(x=>x.cod===el.dataset.cod);
+    if(p){const os=document.getElementById("os-sel").value;const v=p[os];items.push({practica:JSON.parse(JSON.stringify(p)),os,qty:1,monto:v?Number(v):0});renderItems();}
+    searchInp.value="";dd.classList.remove("open");
+  }));
+});
+document.addEventListener("click",e=>{if(!e.target.closest(".search-wrap"))dd.classList.remove("open");});
+
+function renderItems(){
+  const list=document.getElementById("items-list");
+  if(!items.length){
+    list.innerHTML='<div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>Buscá una práctica para empezar</p></div>';
+    document.getElementById("total-disp").textContent="$0";return;
+  }
+  let total=0;
+  list.innerHTML=items.map((item,i)=>{
+    const sub=item.monto*item.qty; total+=sub;
+    return `<div class="item-card">
+      <div class="item-top">
+        <div class="item-name">${item.practica.nom} <span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3)">${item.practica.cod}</span></div>
+        <button class="item-del" data-idx="${i}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="item-bottom">
+        <span class="os-tag">${item.os}</span>
+        <div class="item-monto"><input type="number" min="0" value="${item.monto}" data-idx="${i}" data-field="monto" placeholder="Monto"></div>
+        <div class="item-qty"><input type="number" min="1" max="99" value="${item.qty}" data-idx="${i}" data-field="qty"></div>
+        <div class="item-sub">$${sub.toLocaleString("es-AR")}</div>
+      </div>
+    </div>`;
+  }).join("");
+  document.getElementById("total-disp").textContent="$"+total.toLocaleString("es-AR");
+  list.querySelectorAll("input[data-field]").forEach(inp=>inp.addEventListener("change",()=>{
+    const idx=+inp.dataset.idx;
+    if(inp.dataset.field==="monto")items[idx].monto=Math.max(0,Number(inp.value)||0);
+    else items[idx].qty=Math.max(1,parseInt(inp.value)||1);
+    renderItems();
+  }));
+  list.querySelectorAll(".item-del").forEach(btn=>btn.addEventListener("click",()=>{items.splice(+btn.dataset.idx,1);renderItems();}));
+}
+
+function getTotal(){return items.reduce((a,i)=>a+i.monto*i.qty,0);}
+
+async function registrar(){
+  const pacInp=document.getElementById("pac-inp");
+  const nombre=pacInp.value.trim();
+  if(!nombre){pacInp.classList.add("error");pacInp.focus();setTimeout(()=>pacInp.classList.remove("error"),2000);toast("⚠ Ingresá el nombre del paciente");return;}
+  if(!items.length){toast("Agregá al menos una práctica");return;}
+  const fechaVal=document.getElementById("fecha-inp").value;
+  const fechaDate=fechaVal?new Date(fechaVal+"T12:00:00"):new Date();
+  const mesKey=fechaDate.getFullYear()+"-"+(String(fechaDate.getMonth()+1).padStart(2,"0"));
+  const mesLabel=fechaDate.toLocaleString("es-AR",{month:"long",year:"numeric"});
+  historial.unshift({id:Date.now(),nombre,fecha:fechaDate.toLocaleDateString("es-AR"),mes:mesKey,mesLabel,total:getTotal(),items:JSON.parse(JSON.stringify(items))});
+  await saveAll("save-ind");
+  updateMesFiltro(); renderHist(); limpiar();
+  toast("✓ Cobro registrado");
+}
+
+function limpiar(){
+  items=[];
+  document.getElementById("pac-inp").value="";
+  document.getElementById("fecha-inp").value=new Date().toISOString().split("T")[0];
+  renderItems();
+}
+
+function copiar(){
+  const nombre=document.getElementById("pac-inp").value.trim()||"Paciente";
+  const fecha=document.getElementById("fecha-inp").value;
+  let txt=`COBRO ODONTOLÓGICO\nPaciente: ${nombre}\nFecha: ${fecha}\n\n`;
+  items.forEach((item,i)=>{const sub=item.monto*item.qty;txt+=`${i+1}. ${item.practica.nom} (${item.practica.cod}) — ${item.os} — Cant: ${item.qty} — $${sub.toLocaleString("es-AR")}\n`;});
+  txt+=`\nTOTAL: $${getTotal().toLocaleString("es-AR")}`;
+  navigator.clipboard?.writeText(txt).then(()=>toast("Copiado al portapapeles"));
+}
+
+// ---- HISTORIAL ----
+function updateMesFiltro(){
+  const sel=document.getElementById("mes-filter");
+  const actual=sel.value;
+  const meses=[...new Set(historial.map(h=>h.mes))].sort((a,b)=>b.localeCompare(a));
+  sel.innerHTML='<option value="">Todos los meses</option>'+meses.map(m=>{
+    const lbl=historial.find(h=>h.mes===m)?.mesLabel||m;
+    return `<option value="${m}"${m===actual?" selected":""}>${lbl}</option>`;
+  }).join("");
+}
+
+function renderHist(){
+  const cont=document.getElementById("hist-content");
+  const filtro=document.getElementById("mes-filter").value;
+  const datos=filtro?historial.filter(h=>h.mes===filtro):historial;
+  if(!datos.length){cont.innerHTML='<div class="empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay cobros registrados aún</p></div>';return;}
+  const porOS={};
+  datos.forEach(h=>h.items.forEach(item=>{if(!porOS[item.os])porOS[item.os]=0;porOS[item.os]+=item.monto*item.qty;}));
+  const totalGral=Object.values(porOS).reduce((a,v)=>a+v,0);
+  const dashHtml=`<div class="section-title">Resumen</div>
+  <div class="dash-row">
+    <div class="dash-card total"><div class="dash-lbl">Total cobrado</div><div class="dash-val">$${totalGral.toLocaleString("es-AR")}</div><div class="dash-sub">${datos.length} cobro${datos.length!==1?"s":""}</div></div>
+    ${Object.entries(porOS).sort((a,b)=>b[1]-a[1]).map(([os,v])=>`<div class="dash-card"><div class="dash-lbl">${os}</div><div class="dash-val">$${v.toLocaleString("es-AR")}</div><div class="dash-sub">${Math.round(v/totalGral*100)}%</div></div>`).join("")}
+  </div>`;
+  const grupos={};
+  datos.forEach(h=>{if(!grupos[h.mes])grupos[h.mes]={label:h.mesLabel,items:[]};grupos[h.mes].items.push(h);});
+  const gruposHtml=Object.keys(grupos).sort((a,b)=>b.localeCompare(a)).map(mes=>{
+    const g=grupos[mes];
+    const totMes=g.items.reduce((a,h)=>a+h.total,0);
+    const osMes={};
+    g.items.forEach(h=>h.items.forEach(item=>{if(!osMes[item.os])osMes[item.os]=0;osMes[item.os]+=item.monto*item.qty;}));
+    return `<div class="section-title">
+      <div class="mes-header"><span class="mes-name">${g.label}</span><span class="mes-total">$${totMes.toLocaleString("es-AR")}</span></div>
+    </div>
+    <div class="os-pills">${Object.entries(osMes).map(([os,v])=>`<span class="os-pill">${os} <strong>$${v.toLocaleString("es-AR")}</strong></span>`).join("")}</div>
+    ${g.items.map(h=>{
+      const osDelCobro=[...new Set(h.items.map(i=>i.os))];
+      return `<div class="cobro-card">
+        <div style="flex:1;min-width:0">
+          <div class="cobro-pac">${h.nombre}</div>
+          <div class="cobro-meta">${h.fecha} · ${h.items.length} práctica${h.items.length!==1?"s":""}
+            ${osDelCobro.map(os=>`<span class="os-tag" style="margin-left:4px">${os}</span>`).join("")}
+          </div>
+          <div class="cobro-actions">
+            <button class="cobro-btn" onclick="cargar(${h.id})">Cargar</button>
+            <button class="cobro-btn del" onclick="borrar(${h.id})">Eliminar</button>
+          </div>
+        </div>
+        <div class="cobro-right"><div class="cobro-amt">$${h.total.toLocaleString("es-AR")}</div></div>
+      </div>`;
+    }).join("")}`;
+  }).join("");
+  cont.innerHTML=dashHtml+gruposHtml;
+}
+
+function cargar(id){
+  const h=historial.find(x=>x.id===id);if(!h)return;
+  items=JSON.parse(JSON.stringify(h.items));
+  document.getElementById("pac-inp").value=h.nombre;
+  switchTab("cobro");renderItems();toast("Cobro cargado");
+}
+
+async function borrar(id){
+  if(!confirm("¿Eliminar este cobro?"))return;
+  historial=historial.filter(x=>x.id!==id);
+  await saveAll("save-ind");
+  updateMesFiltro();renderHist();
+}
+
+// ---- BASE DE DATOS ----
+function renderDB(){
+  const list=document.getElementById("db-list");
+  list.innerHTML=practicas.map((p,i)=>`
+    <div class="practica-card">
+      <div class="practica-head">
+        <input class="practica-nom" type="text" value="${p.nom||""}" data-idx="${i}" data-field="nom" placeholder="Nombre" style="background:transparent;border:none;color:var(--text);font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;width:100%;padding:0">
+        <input class="practica-cod" type="text" value="${p.cod||""}" data-idx="${i}" data-field="cod" placeholder="000" style="background:transparent;border:none;color:var(--accent);font-size:12px;font-family:'DM Mono',monospace;width:55px;text-align:right;padding:0">
+        <button class="item-del" onclick="deletePractica(${i})" style="margin-left:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="practica-grid">
+        ${OS_KEYS.map(os=>`<div class="pf-row"><div class="pf-label">${os}</div><input class="pf-input" type="number" value="${p[os]||""}" placeholder="—" data-idx="${i}" data-field="${os}"></div>`).join("")}
+      </div>
+    </div>`).join("");
+  list.querySelectorAll("input[data-idx]").forEach(inp=>inp.addEventListener("change",()=>{
+    const idx=+inp.dataset.idx; const field=inp.dataset.field;
+    practicas[idx][field]=inp.type==="number"?(inp.value?Number(inp.value):null):inp.value;
+  }));
+}
+
+async function saveDB(){await saveAll("db-ind");toast("Aranceles guardados ✓");}
+function addPractica(){
+  const b={cod:"",nom:"Nueva práctica"};OS_KEYS.forEach(os=>b[os]=null);
+  practicas.unshift(b);renderDB();
+  document.getElementById("db-list").firstElementChild?.querySelector("input")?.focus();
+}
+function deletePractica(i){if(!confirm("¿Eliminar esta práctica?"))return;practicas.splice(i,1);renderDB();}
+
+// Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+loadData();
+</script>
+</body>
+</html>
