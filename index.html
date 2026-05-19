@@ -239,10 +239,13 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div>
-      <div class="topbar-title">🦷 Cobros Odontológicos</div>
+      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v1.1</span></div>
       <div class="topbar-sub" id="topbar-sub">Cargando...</div>
     </div>
-    <span class="save-ind" id="save-ind"></span>
+    <div style="text-align:right;flex-shrink:0">
+      <div style="font-size:10px;color:var(--text3);white-space:nowrap">por Alejo De Antoni</div>
+      <span class="save-ind" id="save-ind"></span>
+    </div>
   </div>
 
   <!-- CONTENT -->
@@ -337,10 +340,6 @@
         <input type="text" id="db-search" placeholder="Buscar práctica..." style="padding-left:32px" oninput="renderDB()">
       </div>
       <div id="db-list"></div>
-      <div style="text-align:center;padding:24px 0 8px;color:var(--text3);font-size:11px;line-height:1.6">
-        <div style="font-family:'DM Mono',monospace">v1.0</div>
-        <div>Creado por Alejo De Antoni</div>
-      </div>
     </div>
 
   </div>
