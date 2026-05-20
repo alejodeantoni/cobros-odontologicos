@@ -239,7 +239,7 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div>
-      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v1.2</span></div>
+      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v1.3</span></div>
       <div class="topbar-sub" id="topbar-sub">Cargando...</div>
     </div>
     <div style="text-align:right;flex-shrink:0">
@@ -633,6 +633,7 @@ function renderHist(){
     ).join("");
     const pacCount=g.items.length;
     const mesId=mes.replace("-","_");
+    const ultimoReg=g.items.reduce((a,h)=>h.registrado&&(!a||h.registrado>a)?h.registrado:a,null);
 
     // Pacientes colapsados
     const pacientesHtml=g.items.map(h=>{
@@ -662,7 +663,7 @@ function renderHist(){
         '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:10px">'+
           '<div style="text-align:right">'+
             '<div style="font-size:16px;font-weight:600;font-family:DM Mono,monospace;color:var(--text)">$'+totMes.toLocaleString("es-AR")+'</div>'+
-            '<div style="font-size:11px;color:var(--text3)">'+pacCount+' paciente'+(pacCount!==1?"s":"")+'</div>'+
+            '<div style="font-size:11px;color:var(--text3)">'+pacCount+' paciente'+(pacCount!==1?"s":"")+(ultimoReg?' · último: '+ultimoReg:"")+'</div>'+
           '</div>'+
           '<svg id="arrow-'+mesId+'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" style="transition:transform .2s;transform:rotate(0deg);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>'+
         '</div>'+
