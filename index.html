@@ -240,7 +240,7 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div>
-      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v2.0</span></div>
+      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v2.1</span></div>
       <div class="topbar-sub" id="topbar-sub">Cargando...</div>
     </div>
     <div style="text-align:right;flex-shrink:0">
@@ -655,8 +655,16 @@ function renderHist(){
       return '<div class="cobro-card">'+
         '<div style="flex:1;min-width:0">'+
           '<div class="cobro-pac">'+h.nombre+'</div>'+
-          '<div class="cobro-meta">'+h.fecha+(h.registrado?' · reg. '+h.registrado:"")+' · '+h.items.length+' práctica'+(h.items.length!==1?"s":"")+
+          '<div class="cobro-meta">'+h.fecha+(h.registrado?' · reg. '+h.registrado:"")+
             osDelCobro.map(os=>'<span class="os-tag" style="margin-left:4px">'+os+'</span>').join("")+
+          '</div>'+
+          '<div style="margin-top:4px">'+
+            h.items.map(item=>'<div style="font-size:12px;color:var(--text2);padding:2px 0">'+
+              '<span style="font-family:DM Mono,monospace;color:var(--text3);margin-right:4px">'+item.practica.cod+'</span>'+
+              item.practica.nom+
+              (item.qty>1?' <span style="color:var(--text3)">×'+item.qty+'</span>':'')+
+              ' <span style="font-family:DM Mono,monospace;color:var(--text2);margin-left:4px">$'+(item.monto*item.qty).toLocaleString("es-AR")+'</span>'+
+            '</div>').join("")+
           '</div>'+
           '<div class="cobro-actions">'+
             '<button class="cobro-btn" onclick="cargar('+h.id+')">Cargar</button>'+
