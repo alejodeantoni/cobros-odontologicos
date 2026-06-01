@@ -240,7 +240,7 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div>
-      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v2.7</span></div>
+      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v2.8</span></div>
       <div class="topbar-sub" id="topbar-sub">Cargando...</div>
     </div>
     <div style="text-align:right;flex-shrink:0">
@@ -453,6 +453,7 @@ const DEFAULT_DB=[
 let practicas=[], historial=[], items=[], dbLastMod=null;
 let dataLoadedOk=false; // bloquea saveAll si loadData falló
 let obrasSociales=["OSDE","PODER J","MEDIF","SWISS M","SANCOR","OPDEA","PARTICULAR"];
+let deletedIds=new Set();
 
 // Init fecha
 const fechaInp=document.getElementById("fecha-inp");
@@ -514,6 +515,7 @@ async function loadData(){
     historial=d.historial||[];
     dbLastMod=d.dbLastMod||null;
     if(d.obrasSociales&&d.obrasSociales.length)obrasSociales=d.obrasSociales;
+    if(d.deletedIds)deletedIds=new Set(d.deletedIds);
     dataLoadedOk=true;
     document.getElementById("topbar-sub").textContent=historial.length+" cobros registrados";
   }catch(e){
@@ -548,7 +550,12 @@ async function mergeAndSave(indId){
 
   // 2. Merge historial: unión por id, gana el de mayor fecha de registro
   const histMap={};
-  (remote.historial||[]).forEach(h=>histMap[h.id]=h);
+  // Combinar deletedIds remotos y locales
+  const allDeletedIds=new Set([...deletedIds,...(remote.deletedIds||[])]);
+  deletedIds=allDeletedIds;
+  (remote.historial||[]).forEach(h=>{
+    if(!allDeletedIds.has(h.id)) histMap[h.id]=h;
+  });
   historial.forEach(h=>{
     if(!histMap[h.id]){
       histMap[h.id]=h; // nuevo local
@@ -590,7 +597,7 @@ async function mergeAndSave(indId){
   setInd(indId,"Guardando...");
   try{
     await fetch(BASE_URL,{method:"PUT",headers:{"Content-Type":"application/json","X-Master-Key":API_KEY},
-      body:JSON.stringify({practicas,historial,dbLastMod,obrasSociales})});
+      body:JSON.stringify({practicas,historial,dbLastMod,obrasSociales,deletedIds:[...deletedIds]})});
     try{localStorage.setItem("cobros_backup",JSON.stringify({practicas,historial,dbLastMod,obrasSociales,backupDate:new Date().toLocaleString("es-AR")}));}catch(e){}
     setInd(indId,"Guardado ✓","ok");
     document.getElementById("topbar-sub").textContent=historial.length+" cobros registrados";
@@ -830,6 +837,7 @@ function cargar(id){
 
 async function borrar(id){
   if(!confirm("¿Eliminar este cobro?"))return;
+  deletedIds.add(id);
   historial=historial.filter(x=>x.id!==id);
   await saveAll("save-ind");
   updateMesFiltro();renderHist();
