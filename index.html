@@ -240,7 +240,7 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div>
-      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v2.4</span></div>
+      <div class="topbar-title">🦷 Cobros Odontológicos <span style="font-size:11px;font-weight:400;color:var(--text3);font-family:'DM Mono',monospace">v2.5</span></div>
       <div class="topbar-sub" id="topbar-sub">Cargando...</div>
     </div>
     <div style="text-align:right;flex-shrink:0">
@@ -677,11 +677,14 @@ function renderItems(){
 
 function getTotal(){return items.reduce((a,i)=>a+i.monto*i.qty,0);}
 
+let registrando=false;
 async function registrar(){
+  if(registrando)return;
+  registrando=true;
   const pacInp=document.getElementById("pac-inp");
   const nombre=pacInp.value.trim();
-  if(!nombre){pacInp.classList.add("error");pacInp.focus();setTimeout(()=>pacInp.classList.remove("error"),2000);toast("⚠ Ingresá el nombre del paciente");return;}
-  if(!items.length){toast("Agregá al menos una práctica");return;}
+  if(!nombre){pacInp.classList.add("error");pacInp.focus();setTimeout(()=>pacInp.classList.remove("error"),2000);toast("⚠ Ingresá el nombre del paciente");registrando=false;return;}
+  if(!items.length){toast("Agregá al menos una práctica");registrando=false;return;}
   const fechaVal=document.getElementById("fecha-inp").value;
   const fechaDate=fechaVal?new Date(fechaVal+"T12:00:00"):new Date();
   const mesKey=fechaDate.getFullYear()+"-"+(String(fechaDate.getMonth()+1).padStart(2,"0"));
@@ -690,6 +693,7 @@ async function registrar(){
   await saveAll("save-ind");
   updateMesFiltro(); renderHist(); limpiar();
   toast("✓ Cobro registrado");
+  registrando=false;
 }
 
 function limpiar(){
@@ -824,7 +828,7 @@ function cargar(id){
   switchTab("cobro");renderItems();toast("Cobro cargado");
 }
 
-async function borrar(id){
+async async function borrar(id){
   if(!confirm("¿Eliminar este cobro?"))return;
   historial=historial.filter(x=>x.id!==id);
   await saveAll("save-ind");
